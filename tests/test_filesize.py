@@ -104,20 +104,20 @@ def test_naturalsize(test_args: list[int] | list[int | bool], expected: str) -> 
 
 
 @pytest.mark.parametrize(
-    "test_args, expected",
+    "value, binary, gnu, format_, expected",
     [
         # Custom formats may contain text around the numeric conversion.
-        ([999_999, False, True, "Size: %.1f"], "Size: 976.6K"),
-        ([3000, False, True, "~%.3f"], "~2.930K"),
-        ([3141592, False, False, "%.2f total"], "3.14 total MB"),
+        (999_999, False, True, "Size: %.1f", "Size: 976.6K"),
+        (3000, False, True, "~%.3f", "~2.930K"),
+        (3141592, False, False, "%.2f total", "3.14 total MB"),
         # Rollover still applies when the format contains text.
-        ([999999, False, False, "Size: %.1f"], "Size: 1.0 MB"),
-        ([999999, False, False, "%.1f total"], "1.0 total MB"),
-        ([1024**2 - 1, True, False, "about %.1f"], "about 1.0 MiB"),
-        ([999999, False, False, "%.1f%%"], "1.0% MB"),
+        (999999, False, False, "Size: %.1f", "Size: 1.0 MB"),
+        (999999, False, False, "%.1f total", "1.0 total MB"),
+        (1024**2 - 1, True, False, "about %.1f", "about 1.0 MiB"),
+        (999999, False, False, "%.1f%%", "1.0% MB"),
     ],
 )
 def test_naturalsize_custom_format_text(
-    test_args: list[int | bool | str], expected: str
+    value: int, binary: bool, gnu: bool, format_: str, expected: str
 ) -> None:
-    assert humanize.naturalsize(*test_args) == expected
+    assert humanize.naturalsize(value, binary, gnu, format_) == expected
