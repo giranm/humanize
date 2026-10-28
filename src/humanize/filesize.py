@@ -35,6 +35,28 @@ suffixes = {
 }
 
 
+def _rounded_mantissa(format: str, mantissa: float) -> float | None:
+    """Return `mantissa` as rounded by the conversion spec in `format`.
+
+    Only the conversion spec is applied, so text around it (e.g. "Size: %.1f")
+    does not need to parse as a number. Returns `None` if `format` does not contain
+    exactly one conversion spec or its result is not numeric.
+    """
+    import re
+
+    specs = [
+        spec
+        for spec in re.findall(r"%[#0\- +]*\d*(?:\.\d+)?[hlL]?[a-zA-Z%]", format)
+        if spec != "%%"
+    ]
+    if len(specs) != 1:
+        return None
+    try:
+        return float(specs[0] % mantissa)
+    except (TypeError, ValueError):
+        return None
+
+
 def naturalsize(
     value: float | str,
     binary: bool = False,
@@ -103,8 +125,10 @@ def naturalsize(
     # mantissa afterward; rounding can push it up to `base` (e.g. 999999 is
     # 999.999 kB, which formats to "1000.0 kB"). When that happens and a larger
     # suffix is available, step up one suffix so the result reads "1.0 MB".
-    if exp < len(suffix) and abs(float(format % (abs_bytes / (base**exp)))) >= base:
-        exp += 1
+    if exp < len(suffix):
+        rounded = _rounded_mantissa(format, abs_bytes / (base**exp))
+        if rounded is not None and abs(rounded) >= base:
+            exp += 1
     space = "" if gnu else " "
     ret: str = format % (bytes_ / (base**exp)) + space + _(suffix[exp - 1])
     return ret
