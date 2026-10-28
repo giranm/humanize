@@ -34,7 +34,13 @@ jobs:
         run: pip install -e ".[tests]"
 
       - name: Run benchmarks
+        if: github.repository == 'python-humanize/humanize'
         uses: CodSpeedHQ/action@821a40cd6c80e3cfe387caf55668287addd808da # v5.5.0
         with:
           mode: simulation
           run: pytest tests/test_benchmarks.py --codspeed
+
+      # Tokenless CodSpeed uploads only work for the registered upstream repo
+      - name: Run benchmarks without upload
+        if: github.repository != 'python-humanize/humanize'
+        run: pytest tests/test_benchmarks.py
